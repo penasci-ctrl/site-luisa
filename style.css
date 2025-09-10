@@ -154,7 +154,7 @@ audio {
 }
 
 .text-block p {
-    margin-bottom: 1em; /* Espaçamento entre parágrafos */
+    margin-bottom: 1em;
 }
 
 .author-signature {
@@ -200,8 +200,8 @@ audio {
 /* --- Créditos do Rodapé --- */
 .footer-credits {
     margin-top: 30px;
-    font-size: 0.8em;
-    color: #ccc;
+    font-size: 0.7em; /* Reduzido para ser mais discreto */
+    color: #b3b3b3; /* Cor mais escura para menos contraste */
     letter-spacing: 0.05em;
     line-height: 1.5;
 }
