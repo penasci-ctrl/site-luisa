@@ -51,7 +51,7 @@ a {
 
 a:hover {
     color: #000;
-    background-color: #ff0202; /* Cor de hover atualizada */
+    background-color: #ff0202;
     text-decoration: none;
 }
 
@@ -71,7 +71,6 @@ hr::before {
 footer {
     margin-top: 50px;
     font-size: 1em;
-    /* ATUALIZAÇÃO: Adicionado espaçamento entre as letras para equilíbrio */
     letter-spacing: 0.1em;
 }
 
@@ -104,7 +103,7 @@ audio {
    ================================= */
 
 .profile-photo {
-    max-width: 60px; /* Tamanho da foto atualizado */
+    max-width: 60px;
     height: auto;
     margin: 20px auto 40px auto;
 }
@@ -148,7 +147,23 @@ audio {
     font-style: italic;
 }
 
-/* --- Navegação entre Páginas (Topo e Rodapé) --- */
+/* --- Estilos para a Página de Textos --- */
+.text-container {
+    text-align: left;
+    margin-top: 40px;
+}
+
+.text-block p {
+    margin-bottom: 1em; /* Espaçamento entre parágrafos */
+}
+
+.author-signature {
+    text-align: right;
+    font-style: italic;
+    margin-top: 20px;
+}
+
+/* --- Navegação entre Páginas --- */
 .top-navigation {
     display: flex;
     justify-content: space-between;
@@ -182,22 +197,28 @@ audio {
     display: block;
 }
 
-/* NOVA REGRA para o espaço reservado do topo */
-.top-navigation .nav-placeholder {
-    width: 40px; /* Largura aproximada da seta para equilibrar */
-
+/* --- Créditos do Rodapé --- */
+.footer-credits {
+    margin-top: 30px;
+    font-size: 0.8em;
+    color: #ccc;
+    letter-spacing: 0.05em;
+    line-height: 1.5;
 }
 
-/* ATUALIZAÇÃO: Estilo dos links do rodapé de volta para o tamanho de texto normal */
-.page-navigation a {
-    font-size: 1em;
+.footer-credits p {
+    margin: 0.3em 0;
+}
+
+.footer-credits a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.footer-credits a:hover {
+    color: #fff;
+    background-color: transparent;
     text-decoration: underline;
-    padding: 0 10px;
-}
-
-.nav-placeholder {
-    width: 100px;
-    display: block;
 }
 
 
@@ -206,7 +227,7 @@ audio {
    ================================= */
 
 ::selection {
-    background-color: #ff0202; /* Cor de seleção atualizada */
+    background-color: #ff0202;
     color: #000;
 }
 
