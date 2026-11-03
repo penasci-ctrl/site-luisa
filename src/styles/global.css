@@ -1,0 +1,127 @@
+/* Sistema visual — Luisa Alcântara
+   Arial, um tamanho só (13 px), preto sobre branco. Menu fixo no meio da tela, cantos de baixo fixos.
+   Colunas de 165 px: o menu, as listas e os cabeçalhos alinham nelas. */
+:root {
+  --bg: #ffffff;
+  --ink: #000000;
+  --font: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  --size: 13px;
+  --edge: 14px;
+  --c: 165px;                 /* uma coluna */
+  --c2: calc(var(--c) * 2);   /* início do conteúdo */
+  --c4: calc(var(--c) * 4);
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: var(--size); line-height: 1.25; }
+img { display: block; max-width: 100%; height: auto; }
+a { color: inherit; text-decoration: none; }
+a:hover, button:hover { text-decoration: underline; text-underline-offset: 2px; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: left; }
+h1, h2, h3, p, dl, dd, figure, ul, ol { margin: 0; font: inherit; }
+ul, ol { padding: 0; list-style: none; }
+:focus-visible { outline: 1px solid currentColor; outline-offset: 2px; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.mk { white-space: pre; }   /* [·] e [ ] não quebram */
+
+/* ------------------------------------------------------------ moldura fixa (modo diferença: lê sobre foto e sobre branco) */
+.dif { mix-blend-mode: difference; color: #fff; }
+.bar { position: fixed; z-index: 30; left: 0; right: 0; top: 50%; transform: translateY(-50%); display: flex; flex-wrap: nowrap; align-items: baseline; justify-content: space-between; gap: 24px; padding: 0 var(--edge); pointer-events: none; }
+.bar ul { display: flex; flex-wrap: nowrap; align-items: baseline; }
+.bar li { flex: 0 0 var(--c); white-space: nowrap; }
+.bar li:last-child { flex: 0 0 auto; }
+.bar a, .bar button, .foot a { pointer-events: auto; }
+.bar .lang { display: flex; gap: 10px; }
+.foot { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; display: flex; justify-content: space-between; gap: 24px; padding: var(--edge); pointer-events: none; }
+.foot .name { text-transform: uppercase; letter-spacing: .14em; }
+
+/* ------------------------------------------------------------ Obras (home): coluna central que corre por trás do menu */
+.home { display: flex; flex-direction: column; align-items: center; gap: 32px; padding: 0 16px 50vh; }
+.tile { position: relative; display: block; width: min(calc(var(--r) * min(62vh, 560px)), 640px, 100%); }
+.tile .ph { display: block; aspect-ratio: var(--r); background: #f2f2f2; }
+.tile .ph img { width: 100%; height: 100%; object-fit: cover; }
+.tile .cap { position: absolute; top: 100%; left: 0; padding-top: 4px; opacity: 0; transition: opacity .3s; white-space: nowrap; }
+.tile:hover .cap, .tile:focus-visible .cap { opacity: 1; }
+.tile:hover { text-decoration: none; }
+
+/* ------------------------------------------------------------ cabeçalho das páginas (3 colunas) */
+.top { display: grid; grid-template-columns: var(--c2) minmax(0, var(--c4)) minmax(0, 1fr); padding: var(--edge); align-items: start; }
+.top .right { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
+.stack { display: flex; flex-direction: column; }
+.gap { display: flex; flex-direction: column; gap: 13px; }
+.reading { max-width: 520px; display: flex; flex-direction: column; gap: 13px; }
+.reading.poem p { white-space: pre-line; }
+
+/* ------------------------------------------------------------ coluna central de imagens (obra, exposição) */
+.col { display: flex; flex-direction: column; align-items: center; gap: 72px; padding: 48px 16px 50vh; }
+.fig { width: min(calc(var(--r) * min(70vh, 640px)), 760px, 100%); display: flex; flex-direction: column; gap: 8px; }
+.fig .ph { aspect-ratio: var(--r); background: #f2f2f2; }
+.fig .ph img { width: 100%; height: 100%; object-fit: cover; }
+.fig figcaption { display: flex; flex-direction: column; }
+
+/* ------------------------------------------------------------ audioguia */
+.ag { display: flex; flex-direction: column; gap: 4px; margin-top: 12px; }
+.ag-row { display: flex; flex-wrap: wrap; gap: 0 12px; }
+.ag-ctl { display: flex; gap: 12px; align-items: baseline; margin-top: 4px; }
+.ag-tr { margin-top: 8px; white-space: pre-line; max-width: 520px; }
+
+/* ------------------------------------------------------------ listas (Exposições, Index) */
+.list { display: grid; grid-template-columns: var(--c2) minmax(0, 1fr); padding: var(--edge) var(--edge) 50vh; align-items: start; }
+.rows { position: relative; }
+.row { display: grid; grid-template-columns: minmax(0, var(--c4)) auto; gap: 16px; }
+.row-x { display: grid; grid-template-columns: 28px minmax(0, 2.2fr) 44px minmax(0, 3fr) minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
+.preview { position: absolute; z-index: 5; left: 84px; width: 152px; pointer-events: none; opacity: 0; transition: opacity .2s; }
+.preview.is-on { opacity: 1; }
+.filters { display: flex; flex-wrap: wrap; gap: 0 18px; }
+.overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 24px 14px; align-items: end; max-width: 1000px; }
+.overview .ph { aspect-ratio: var(--r); background: #f2f2f2; }
+.overview .ph img { width: 100%; height: 100%; object-fit: cover; }
+.viewtoggle { position: fixed; z-index: 30; left: calc(var(--edge) + var(--c2)); top: calc(50% - 40px); display: flex; flex-direction: column; pointer-events: none; }
+.viewtoggle button { pointer-events: auto; }
+
+/* ------------------------------------------------------------ Sobre */
+.about { display: grid; grid-template-columns: var(--c2) minmax(0, var(--c4)) minmax(0, 1fr); padding: var(--edge) var(--edge) 50vh; gap: 32px 0; }
+.about .bio { padding-right: 48px; }
+.cv-row { display: grid; grid-template-columns: 72px minmax(0, 1fr); }
+.portrait { max-width: 240px; margin-top: 13px; }
+
+/* ------------------------------------------------------------ celular */
+@media (max-width: 800px) {
+  :root { --c2: 0px; }
+  .bar { flex-direction: column; align-items: stretch; gap: 6px; }
+  .bar ul { justify-content: space-between; gap: 12px; }
+  .bar li, .bar li:last-child { flex: 0 1 auto; }
+  .top, .about { grid-template-columns: 1fr; gap: 13px; padding-top: 18px; }
+  .top .right { text-align: left; align-items: flex-start; }
+  .list { grid-template-columns: minmax(0, 1fr); gap: 13px; }
+  .row { padding: 6px 0; }
+  .row-x { grid-template-columns: 24px minmax(0, 1fr) 44px; padding: 6px 0; }
+  .row-x > :nth-child(n+4) { display: none; }
+  .preview { display: none; }
+  .viewtoggle { position: static; flex-direction: row; gap: 12px; margin-top: 13px; }
+  .about .bio { padding-right: 0; }
+  .tile .cap { display: none; }
+  .foot .rights { display: none; }
+  .foot .name { white-space: nowrap; }
+}
+
+/* ------------------------------------------------------------ fotos aparecem com fade ao carregar (só com JS) */
+.js img.fade { opacity: 0; transition: opacity .6s ease; }
+.js img.fade.is-in { opacity: 1; }
+
+/* transição entre páginas: o conteúdo troca, a moldura fica parada */
+@view-transition { navigation: auto; }
+.bar { view-transition-name: site-bar; }
+.foot { view-transition-name: site-foot; }
+::view-transition-group(site-bar), ::view-transition-group(site-foot) { animation-duration: 0s; }
+::view-transition-old(root) { animation: vt-out .2s ease both; }
+::view-transition-new(root) { animation: vt-in .4s ease .05s both; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0s !important; animation: none !important; }
+}

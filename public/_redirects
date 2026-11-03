@@ -1,0 +1,12 @@
+# Endereços do site antigo (HTML estático) para o novo
+/index.html      /                                         301
+/bio_cv.html     /sobre                                    301
+/textos.html     /exposicoes/stalker                       301
+/work1.html      /obras/the-life-and-death-of-nathaniel-prym  301
+/work2.html      /obras/i-believe-in-god-and-so-should-you    301
+/work3.html      /obras/stalker-i                          301
+/work4.html      /obras/stalker-ii                         301
+/work5.html      /obras/stalker-iii                        301
+/work6.html      /obras/stalker-iv                         301
+/work7.html      /obras/stalker-v                          301
+/work8.html      /obras/rish                               301

@@ -1,0 +1,13 @@
+---
+import Base from '../layouts/Base.astro';
+import { UI } from '../lib/i18n.js';
+---
+<Base lang="pt" section="works" path="/" title="404">
+  <div class="top">
+    <h1>404</h1>
+    <div class="stack">
+      <p>{UI.pt.notFound} <a class="ln" href="/">{UI.pt.backHome}</a></p>
+      <p lang="en">{UI.en.notFound} <a class="ln" href="/en/">{UI.en.backHome}</a></p>
+    </div>
+  </div>
+</Base>

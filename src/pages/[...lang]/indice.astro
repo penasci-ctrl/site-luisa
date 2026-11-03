@@ -1,0 +1,140 @@
+---
+// Index: todas as obras, com filtros combináveis (ano, série, técnica, língua, colaborador, exposição)
+import Base from '../../layouts/Base.astro';
+import { getContent } from '../../lib/content.js';
+import { UI, AUDIO_LANGS, href, t, langPaths } from '../../lib/i18n.js';
+import { imgUrl, ratio } from '../../lib/img.js';
+
+export function getStaticPaths() { return langPaths(); }
+
+const { lang } = Astro.props;
+const ui = UI[lang];
+const { works } = await getContent();
+const list = works.filter((w) => w.images?.length);
+
+// O que cada obra "tem" em cada filtro: [valor, rótulo]
+const facets = (w) => ({
+  year: [[String(w.year), String(w.year)]],
+  series: [[w.series || '_none', w.series || ui.noSeries]],
+  tech: (w.materials || []).map((m) => [m.id, t(m.name, lang)]),
+  lang: [...new Set((w.audio || []).map((a) => a.language))].map((l) => [l, AUDIO_LANGS[l]?.[1] || l]),
+  colab: [...new Map((w.audio || []).flatMap((a) => [...a.text, ...a.voice, ...a.music]).map((p) => [p.id, [p.id, p.name]])).values()],
+  expo: (w.exhibitions || []).map((e) => [e.slug, t(e.title, lang)]),
+});
+const data = list.map((w) => facets(w));
+const CATS = [['year', ui.year], ['series', ui.series], ['tech', ui.technique], ['lang', ui.language], ['colab', ui.collaborator], ['expo', ui.exhibition]];
+const pad = (n) => String(n).padStart(2, '0');
+---
+<Base lang={lang} section="index" path="/indice" title={ui.index}>
+  <div class="list">
+    <h1>{ui.index} [<span data-shown>{pad(list.length)}</span>/{pad(list.length)}]</h1>
+
+    <div class="gap" style="max-width: 980px">
+      <div class="filters" role="group" aria-label={ui.filterBy}>
+        <span>{ui.filterBy}</span>
+        {CATS.map(([id, label]) => (
+          <button type="button" data-cat={id} aria-expanded="false" aria-controls="idx-opts"><span class="mk" aria-hidden="true">[ ]</span>{' '}{label}<span data-dot></span></button>
+        ))}
+      </div>
+      <div class="filters" id="idx-opts" data-opts hidden></div>
+      <div class="filters" data-active hidden></div>
+
+      <div class="rows rows-x" data-rows>
+        <ul>
+          {list.map((w, i) => {
+            const c = w.images[0];
+            return (
+              <li data-i={i} data-preview={imgUrl(c, 400)}>
+                <a class="row-x" href={href(lang, `/obras/${w.slug}`)}>
+                  <span>{pad(i + 1)}</span>
+                  <span>{t(w.title, lang)}</span>
+                  <span>[{w.year}]</span>
+                  <span>{t(w.technique, lang)}</span>
+                  <span>{t(w.dimensions, lang)}</span>
+                  <span>{[...new Set(w.audio.map((a) => AUDIO_LANGS[a.language]?.[0] || a.language))].join(' ')}</span>
+                </a>
+              </li>
+            );
+          })}
+        </ul>
+        <img class="preview" style="left: 120px" alt="" aria-hidden="true" data-preview-img />
+        <p data-empty hidden>{ui.none}</p>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline type="application/json" id="idx-data" set:html={JSON.stringify({ data, cats: Object.fromEntries(CATS), active: ui.active, clear: ui.clear })}></script>
+
+  <script>
+    const { data, cats, active: activeLabel, clear: clearLabel } = JSON.parse(document.getElementById('idx-data').textContent);
+    const rows = [...document.querySelectorAll('[data-i]')];
+    const catBtns = [...document.querySelectorAll('[data-cat]')];
+    const optsBox = document.querySelector('[data-opts]');
+    const activeBox = document.querySelector('[data-active]');
+    const shown = document.querySelector('[data-shown]');
+    const empty = document.querySelector('[data-empty]');
+    const f = {};          // filtro ativo por categoria: { tech: 'material-oil', … }
+    let open = '';
+
+    const el = (tag, attrs = {}, text = '') => { const e = document.createElement(tag); Object.assign(e, attrs); if (text) e.textContent = text; return e; };
+    const btn = (on, label, onClick, extra = '') => {
+      const b = el('button', { type: 'button' });
+      b.setAttribute('aria-pressed', String(on));
+      const m = el('span', { className: 'mk' }, on ? '[·]' : '[ ]'); m.setAttribute('aria-hidden', 'true');
+      const lab = el('bdi', {}, label);
+      b.append(m, ' ', lab, extra);
+      b.addEventListener('click', onClick);
+      return b;
+    };
+    const has = (i, cat, v) => data[i][cat].some(([val]) => val === v);
+    const pass = (i, skip) => Object.entries(f).every(([cat, v]) => cat === skip || has(i, cat, v));
+    const labelOf = (cat, v) => { for (const d of data) for (const [val, lab] of d[cat]) if (val === v) return lab; return v; };
+
+    function render() {
+      // linhas
+      let n = 0;
+      rows.forEach((r, i) => { const ok = pass(i); r.hidden = !ok; if (ok) n++; });
+      shown.textContent = String(n).padStart(2, '0');
+      empty.hidden = n > 0;
+      // categorias
+      catBtns.forEach((b) => {
+        const on = b.dataset.cat === open;
+        b.setAttribute('aria-expanded', String(on));
+        b.querySelector('.mk').textContent = on ? '[·]' : '[ ]';
+        b.querySelector('[data-dot]').textContent = f[b.dataset.cat] ? ' ·' : '';
+      });
+      // opções da categoria aberta, com a contagem respeitando os outros filtros
+      optsBox.replaceChildren();
+      optsBox.hidden = !open;
+      if (open) {
+        const counts = new Map();
+        data.forEach((d, i) => { if (pass(i, open)) d[open].forEach(([v, lab]) => counts.set(v, [lab, (counts.get(v)?.[1] || 0) + 1])); });
+        const opts = [...counts.entries()].sort((a, b) => (open === 'year' ? b[0].localeCompare(a[0]) : a[1][0].localeCompare(b[1][0])));
+        opts.forEach(([v, [lab, c]]) => optsBox.append(btn(f[open] === v, lab, () => { if (f[open] === v) delete f[open]; else f[open] = v; render(); }, ` (${c})`)));
+      }
+      // filtros ativos
+      activeBox.replaceChildren();
+      const keys = Object.keys(f);
+      activeBox.hidden = !keys.length;
+      if (keys.length) {
+        activeBox.append(el('span', {}, activeLabel));
+        keys.forEach((cat) => {
+          const b = el('button', { type: 'button' });
+          b.append(`${cats[cat]}: `, el('bdi', {}, labelOf(cat, f[cat])), ' [×]');
+          b.addEventListener('click', () => { delete f[cat]; render(); });
+          activeBox.append(b);
+        });
+        activeBox.append(btn(false, clearLabel, () => { keys.forEach((k) => delete f[k]); render(); }));
+      }
+    }
+    catBtns.forEach((b) => b.addEventListener('click', () => { open = open === b.dataset.cat ? '' : b.dataset.cat; render(); }));
+
+    // miniatura ao passar o mouse
+    const box = document.querySelector('[data-preview-img]');
+    rows.forEach((r) => {
+      r.addEventListener('mouseenter', () => { box.src = r.dataset.preview; box.style.top = `${r.offsetTop + 6}px`; box.classList.add('is-on'); });
+      r.addEventListener('mouseleave', () => box.classList.remove('is-on'));
+    });
+    render();
+  </script>
+</Base>

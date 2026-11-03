@@ -1,0 +1,102 @@
+---
+import '../styles/global.css';
+import { UI, href, t } from '../lib/i18n.js';
+import { imgUrl } from '../lib/img.js';
+import { getContent } from '../lib/content.js';
+
+/**
+ * Moldura comum: menu fixo no meio da tela (Obras · Exposições · Sobre · Index | E-mail · Instagram · PT/EN),
+ * nome no canto inferior esquerdo e © no direito. SEO e dados estruturados.
+ * section: 'works' | 'exhibitions' | 'about' | 'index'
+ * path: caminho desta página sem o prefixo de idioma (para o seletor PT/EN)
+ */
+const { lang = 'pt', section, path = '/', title, description, image, jsonLd } = Astro.props;
+const ui = UI[lang];
+const { settings } = await getContent();
+const siteTitle = 'Luisa Alcântara';
+const fullTitle = title ? `${title} — ${siteTitle}` : siteTitle;
+const desc = description || t(settings?.description, lang) || siteTitle;
+const shareImg = image || settings?.shareImage;
+const ogImage = shareImg ? new URL(imgUrl(shareImg, 1200), Astro.site).href : undefined;
+const canonical = new URL(href(lang, path), Astro.site).href;
+const altPt = new URL(href('pt', path), Astro.site).href;
+const altEn = new URL(href('en', path), Astro.site).href;
+const year = new Date().getFullYear();
+
+const SECTIONS = [['works', '/'], ['exhibitions', '/exposicoes'], ['about', '/sobre'], ['index', '/indice']];
+const mk = (on) => (on ? '[·]' : '[ ]');
+
+// Quem é a artista, para o Google (resolve a confusão com outros "Alcântara")
+const person = {
+  '@context': 'https://schema.org', '@type': 'Person', name: 'Luisa Alcântara', url: new URL('/', Astro.site).href,
+  jobTitle: lang === 'en' ? 'Visual artist' : 'Artista visual', birthPlace: 'São Paulo', nationality: 'Brazilian',
+  sameAs: [settings?.instagram, ...(settings?.galleries || []).map((g) => g.url)].filter(Boolean),
+};
+---
+<!doctype html>
+<html lang={lang === 'en' ? 'en' : 'pt-BR'}>
+<head>
+  <meta charset="utf-8" />
+  <script is:inline>document.documentElement.classList.add('js')</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>{fullTitle}</title>
+  <meta name="description" content={desc} />
+  <link rel="canonical" href={canonical} />
+  <link rel="alternate" hreflang="pt-BR" href={altPt} />
+  <link rel="alternate" hreflang="en" href={altEn} />
+  <link rel="alternate" hreflang="x-default" href={altPt} />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content={siteTitle} />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={desc} />
+  <meta property="og:url" content={canonical} />
+  <meta property="og:locale" content={lang === 'en' ? 'en_US' : 'pt_BR'} />
+  {ogImage && <meta property="og:image" content={ogImage} />}
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="/favicon.ico" sizes="48x48" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/site.webmanifest" />
+  <script type="application/ld+json" set:html={JSON.stringify(jsonLd ? [person, jsonLd] : person)} />
+  <slot name="head" />
+</head>
+<body>
+  <main>
+    <slot />
+  </main>
+
+  <slot name="chrome" />
+
+  <nav class="bar dif" aria-label={ui.menu}>
+    <ul>
+      {SECTIONS.map(([k, p]) => (
+        <li><a href={href(lang, p)} aria-current={k === section ? 'page' : undefined}><span class="mk" aria-hidden="true">{mk(k === section)}</span>{' '}{ui[k]}</a></li>
+      ))}
+    </ul>
+    <ul>
+      {settings?.email && <li><a href={`mailto:${settings.email}`}>{ui.email}</a></li>}
+      {settings?.instagram && <li><a href={settings.instagram} target="_blank" rel="noopener">{ui.instagram}</a></li>}
+      <li class="lang">
+        <a href={href('en', path)} lang="en" hreflang="en" aria-current={lang === 'en' ? 'true' : undefined}><span class="mk" aria-hidden="true">{mk(lang === 'en')}</span> EN</a>
+        <a href={href('pt', path)} lang="pt-BR" hreflang="pt-BR" aria-current={lang === 'pt' ? 'true' : undefined}><span class="mk" aria-hidden="true">{mk(lang === 'pt')}</span> PT</a>
+      </li>
+    </ul>
+  </nav>
+
+  <footer class="foot dif">
+    <a class="name" href={href(lang, '/')}>Luisa Alcântara</a>
+    <span>©{year}<span class="rights"> Luisa Alcântara, {ui.rights}</span></span>
+  </footer>
+
+  <script>
+    // Fotos entram com fade suave ao terminar de carregar
+    document.querySelectorAll('main img').forEach((img) => {
+      const show = () => img.classList.add('is-in');
+      img.classList.add('fade');
+      if (img.complete && img.naturalWidth) requestAnimationFrame(show);
+      else { img.addEventListener('load', show, { once: true }); img.addEventListener('error', show, { once: true }); }
+    });
+  </script>
+</body>
+</html>

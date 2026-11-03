@@ -1,0 +1,63 @@
+---
+import Base from '../../../layouts/Base.astro';
+import AudioGuide from '../../../components/AudioGuide.astro';
+import Texts from '../../../components/Texts.astro';
+import { getContent } from '../../../lib/content.js';
+import { UI, href, t } from '../../../lib/i18n.js';
+import { imgUrl, srcset, ratio } from '../../../lib/img.js';
+
+export async function getStaticPaths() {
+  const { works } = await getContent();
+  const list = works.filter((w) => w.images?.length);
+  return ['pt', 'en'].flatMap((lang) =>
+    list.map((w, i) => ({
+      params: { lang: lang === 'en' ? 'en' : undefined, slug: w.slug },
+      props: { lang, work: w, next: list[(i + 1) % list.length] },
+    }))
+  );
+}
+
+const { lang, work, next } = Astro.props;
+const ui = UI[lang];
+const title = t(work.title, lang);
+const shows = (work.exhibitions || []).filter(Boolean);
+const technique = t(work.technique, lang);
+const dims = t(work.dimensions, lang);
+const ld = {
+  '@context': 'https://schema.org', '@type': 'VisualArtwork', name: title, dateCreated: String(work.year),
+  creator: { '@type': 'Person', name: 'Luisa Alcântara' },
+  artMedium: technique || undefined, size: dims || undefined,
+  image: work.images.map((im) => new URL(imgUrl(im, 1600), Astro.site).href),
+};
+---
+<Base lang={lang} section="index" path={`/obras/${work.slug}`} title={`${title}, ${work.year}`} description={[title, work.year, technique, dims].filter(Boolean).join(' · ')} image={work.images[0]} jsonLd={ld}>
+  <header class="top">
+    <h1>{title} [{work.year}]</h1>
+    <div class="gap">
+      <div class="stack">
+        {technique && <span>{technique}</span>}
+        {dims && <span>{dims}</span>}
+        {work.series && <span>{ui.series}: {work.series}</span>}
+        {shows.map((e) => (
+          <span>{ui.exhibition}: {e.showInCvOnly ? `${t(e.title, lang)} [${e.year}]` : <a href={href(lang, `/exposicoes/${e.slug}`)}>{t(e.title, lang)} [{e.year}]</a>}</span>
+        ))}
+        {work.photoCredit && <span>{ui.photos}: {work.photoCredit}</span>}
+      </div>
+      <AudioGuide tracks={work.audio} lang={lang} label={title} />
+      <Texts texts={work.texts} lang={lang} />
+    </div>
+    <div class="right">
+      <a href={href(lang, '/indice')}><span class="mk" aria-hidden="true">[←]</span>{' '}{ui.index}</a>
+      {next && next.slug !== work.slug && <a href={href(lang, `/obras/${next.slug}`)}><span class="mk" aria-hidden="true">[→]</span>{' '}{ui.next}</a>}
+    </div>
+  </header>
+
+  <div class="col">
+    {work.images.map((im, i) => (
+      <figure class="fig" style={`--r:${ratio(im)}`}>
+        <span class="ph"><img src={imgUrl(im, 1600)} srcset={srcset(im)} sizes="(max-width: 800px) 92vw, 760px" alt={im.alt || `${title}, ${work.year}`} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" width={im.w} height={im.h} /></span>
+        {im.caption && <figcaption>{im.caption}</figcaption>}
+      </figure>
+    ))}
+  </div>
+</Base>

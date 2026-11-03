@@ -1,0 +1,60 @@
+---
+import Base from '../../layouts/Base.astro';
+import { getContent } from '../../lib/content.js';
+import { UI, href, t, tBlocks, tPlain, langPaths } from '../../lib/i18n.js';
+import { imgUrl, srcset } from '../../lib/img.js';
+
+export function getStaticPaths() { return langPaths(); }
+
+const { lang } = Astro.props;
+const ui = UI[lang];
+const { about, settings, exhibitions } = await getContent();
+const bio = tBlocks(about?.bio, lang);
+const galleries = settings?.galleries || [];
+const solo = exhibitions.filter((e) => e.kind === 'solo');
+const group = exhibitions.filter((e) => e.kind !== 'solo');
+const line = (e) => [t(e.title, lang), [e.venue, t(e.city, lang)].filter(Boolean).join(', ')].join(', ') + (e.note ? ` (${t(e.note, lang)})` : '');
+---
+<Base lang={lang} section="about" path="/sobre" title={ui.about} description={tPlain(about?.bio, lang) || undefined} image={about?.portrait}>
+  <div class="about">
+    <h1>{ui.about}</h1>
+
+    <div class="bio gap">
+      <div class="reading"><Fragment set:html={bio} /></div>
+      {galleries.length > 0 && (
+        <p>{ui.represented} {galleries.map((g, i) => {
+          const label = [g.name, t(g.city, lang)].filter(Boolean).join(', ');
+          return <>{i > 0 && '; '}{g.url ? <a class="ln" href={g.url} target="_blank" rel="noopener">{label}</a> : label}</>;
+        })}.</p>
+      )}
+      <div class="stack">
+        {settings?.email && <a href={`mailto:${settings.email}`}>{settings.email}</a>}
+        {settings?.instagram && <a href={settings.instagram} target="_blank" rel="noopener">{ui.instagram}</a>}
+        {about?.cvPdf && <a href={about.cvPdf} target="_blank" rel="noopener"><span class="mk" aria-hidden="true">[↓]</span>{' '}{ui.cvPdf}</a>}
+      </div>
+      {about?.portrait && (
+        <figure class="portrait">
+          <img src={imgUrl(about.portrait, 600)} srcset={srcset(about.portrait)} sizes="240px" alt={about.portrait.alt || 'Luisa Alcântara'} loading="lazy" decoding="async" width={about.portrait.w} height={about.portrait.h} />
+          {about.portraitCredit && <figcaption>{ui.photos}: {about.portraitCredit}</figcaption>}
+        </figure>
+      )}
+    </div>
+
+    <div class="gap">
+      {(about?.cv || []).map((sec) => (
+        <div class="stack">
+          <h2>{t(sec.title, lang)}</h2>
+          {(sec.entries || []).map((e) => <div class="cv-row"><span>{e.year}</span><span>{t(e.text, lang)}</span></div>)}
+        </div>
+      ))}
+      {[[ui.soloList, solo], [ui.groupList, group]].map(([label, list]) => list.length > 0 && (
+        <div class="stack">
+          <h2>{label}</h2>
+          {list.map((e) => (
+            <div class="cv-row"><span>{e.year}</span>{e.showInCvOnly ? <span>{line(e)}</span> : <a href={href(lang, `/exposicoes/${e.slug}`)}>{line(e)}</a>}</div>
+          ))}
+        </div>
+      ))}
+    </div>
+  </div>
+</Base>

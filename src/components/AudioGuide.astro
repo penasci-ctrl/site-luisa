@@ -1,0 +1,91 @@
+---
+// Audioguia de uma obra: escolhe a língua em [ ] colchetes, mostra os créditos e toca o áudio.
+// Um <audio> por guia, com preload="none": nada é baixado antes de alguém clicar em Ouvir.
+import { UI, AUDIO_LANGS, names } from '../lib/i18n.js';
+
+const { tracks = [], lang = 'pt', label } = Astro.props;
+const ui = UI[lang];
+const useTitles = tracks.some((tr) => tr.title);
+const def = Math.max(0, tracks.findIndex((tr) => tr.language === lang));
+const credit = (tr) =>
+  [
+    tr.text?.length && `${ui.text}: ${names(tr.text)}`,
+    tr.music?.length && `${ui.music}: ${names(tr.music)}`,
+    tr.voice?.length && `${ui.voice}: ${names(tr.voice)}`,
+  ].filter(Boolean).join(' — ');
+---
+{tracks.length > 0 && (
+  <div class="ag" data-ag role="group" aria-label={label ? `${ui.audio}: ${label}` : ui.audio}>
+    <div class="ag-row">
+      <span>{ui.audio}</span>
+      {tracks.map((tr, i) => {
+        const [code, full] = AUDIO_LANGS[tr.language] || [tr.language?.toUpperCase(), tr.language];
+        return (
+          <button type="button" data-pick={i} aria-pressed={i === def ? 'true' : 'false'} aria-label={useTitles ? `${tr.title || full} (${full})` : full}>
+            <span class="mk" aria-hidden="true">{i === def ? '[·]' : '[ ]'}</span>{' '}{useTitles ? (tr.title || code) : code}
+          </button>
+        );
+      })}
+    </div>
+    {tracks.map((tr, i) => (
+      <div data-track={i} data-src={tr.src} hidden={i !== def}>
+        {credit(tr) && <p>{credit(tr)}</p>}
+        <div class="ag-ctl">
+          <button type="button" data-play data-label-play={ui.play} data-label-pause={ui.pause}><span class="mk" aria-hidden="true">[▸]</span>{' '}<span data-play-label>{ui.play}</span></button>
+          <span data-time aria-live="off"></span>
+          {tr.transcript && <button type="button" data-tr-toggle aria-expanded="false"><span class="mk" aria-hidden="true">[ ]</span>{' '}{ui.transcript}</button>}
+        </div>
+        {tr.transcript && <p class="ag-tr" data-tr hidden>{tr.transcript}</p>}
+      </div>
+    ))}
+    <audio preload="none" data-audio></audio>
+  </div>
+)}
+
+<script>
+  const fmt = (s) => (Number.isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}` : '');
+  const all = [...document.querySelectorAll('[data-ag]')];
+  all.forEach((ag) => {
+    const audio = ag.querySelector('[data-audio]');
+    const picks = [...ag.querySelectorAll('[data-pick]')];
+    const panels = [...ag.querySelectorAll('[data-track]')];
+    let cur = Math.max(0, panels.findIndex((p) => !p.hidden));
+    const panel = () => panels[cur];
+    const setPlaying = (on) => {
+      const b = panel().querySelector('[data-play]');
+      b.querySelector('.mk').textContent = on ? '[❚❚]' : '[▸]';
+      b.querySelector('[data-play-label]').textContent = on ? b.dataset.labelPause : b.dataset.labelPlay;
+    };
+    const time = () => {
+      const t = panel().querySelector('[data-time]');
+      t.textContent = audio.src && Number.isFinite(audio.duration) ? `${fmt(audio.currentTime)} / ${fmt(audio.duration)}` : '';
+    };
+    picks.forEach((b, i) => b.addEventListener('click', () => {
+      if (i === cur) return;
+      audio.pause(); setPlaying(false); audio.removeAttribute('src'); audio.load(); time();
+      cur = i;
+      picks.forEach((x, j) => { x.setAttribute('aria-pressed', String(j === i)); x.querySelector('.mk').textContent = j === i ? '[·]' : '[ ]'; });
+      panels.forEach((p, j) => { p.hidden = j !== i; });
+    }));
+    panels.forEach((p) => {
+      p.querySelector('[data-play]').addEventListener('click', () => {
+        if (!audio.paused) { audio.pause(); return; }
+        if (!audio.src) audio.src = p.dataset.src;
+        all.forEach((o) => { if (o !== ag) o.querySelector('[data-audio]').pause(); }); // um áudio por vez
+        audio.play();
+      });
+      const tt = p.querySelector('[data-tr-toggle]');
+      if (tt) tt.addEventListener('click', () => {
+        const box = p.querySelector('[data-tr]');
+        box.hidden = !box.hidden;
+        tt.setAttribute('aria-expanded', String(!box.hidden));
+        tt.querySelector('.mk').textContent = box.hidden ? '[ ]' : '[·]';
+      });
+    });
+    audio.addEventListener('play', () => setPlaying(true));
+    audio.addEventListener('pause', () => setPlaying(false));
+    audio.addEventListener('ended', () => { setPlaying(false); audio.currentTime = 0; time(); });
+    audio.addEventListener('timeupdate', time);
+    audio.addEventListener('loadedmetadata', time);
+  });
+</script>

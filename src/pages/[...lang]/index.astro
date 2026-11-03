@@ -1,0 +1,29 @@
+---
+// Obras (home): as capas centralizadas, correndo no scroll por trás do menu
+import Base from '../../layouts/Base.astro';
+import { getContent } from '../../lib/content.js';
+import { UI, href, t, langPaths } from '../../lib/i18n.js';
+import { imgUrl, srcset, ratio } from '../../lib/img.js';
+
+export function getStaticPaths() { return langPaths(); }
+const { lang } = Astro.props;
+const ui = UI[lang];
+const { home } = await getContent();
+---
+<Base lang={lang} section="works" path="/" image={home[0]?.images[0]}>
+  <h1 class="sr-only">Luisa Alcântara — {ui.works}</h1>
+  <div class="home">
+    {home.map((w, i) => {
+      const cover = w.images[0];
+      const title = t(w.title, lang);
+      return (
+        <a class="tile" href={href(lang, `/obras/${w.slug}`)} style={`--r:${ratio(cover)}`}>
+          <span class="ph">
+            <img src={imgUrl(cover, 1200)} srcset={srcset(cover)} sizes="(max-width: 800px) 92vw, 640px" alt={cover.alt || `${title}, ${w.year}`} loading={i < 2 ? 'eager' : 'lazy'} decoding="async" width={cover.w} height={cover.h} />
+          </span>
+          <span class="cap">{title}, {w.year}</span>
+        </a>
+      );
+    })}
+  </div>
+</Base>

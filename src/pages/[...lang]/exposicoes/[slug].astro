@@ -1,0 +1,72 @@
+---
+import Base from '../../../layouts/Base.astro';
+import AudioGuide from '../../../components/AudioGuide.astro';
+import Texts from '../../../components/Texts.astro';
+import { getContent } from '../../../lib/content.js';
+import { UI, href, t, tPlain } from '../../../lib/i18n.js';
+import { imgUrl, srcset, ratio } from '../../../lib/img.js';
+
+export async function getStaticPaths() {
+  const { exhibitions } = await getContent();
+  const pages = exhibitions.filter((e) => !e.showInCvOnly);
+  return ['pt', 'en'].flatMap((lang) =>
+    pages.map((e) => ({ params: { lang: lang === 'en' ? 'en' : undefined, slug: e.slug }, props: { lang, show: e } }))
+  );
+}
+
+const { lang, show } = Astro.props;
+const ui = UI[lang];
+const title = t(show.title, lang);
+const place = [show.venue, t(show.city, lang)].filter(Boolean).join(', ');
+const fmt = (d) => d && new Date(d + 'T12:00:00').toLocaleDateString(lang === 'en' ? 'en-GB' : 'pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+const dates = [fmt(show.startDate), fmt(show.endDate)].filter(Boolean).join(' – ');
+const intro = show.texts[0] ? tPlain(show.texts[0].body, lang).slice(0, 155) : '';
+const ld = {
+  '@context': 'https://schema.org', '@type': 'ExhibitionEvent', name: title,
+  location: { '@type': 'Place', name: show.venue, address: t(show.city, lang) || undefined },
+  startDate: show.startDate || String(show.year), endDate: show.endDate || undefined,
+  performer: { '@type': 'Person', name: 'Luisa Alcântara' },
+};
+---
+<Base lang={lang} section="exhibitions" path={`/exposicoes/${show.slug}`} title={`${title} [${show.year}]`} description={intro || [title, place, show.year].filter(Boolean).join(' · ')} image={show.images[0] || show.works[0]?.images[0]} jsonLd={ld}>
+  <header class="top">
+    <h1>{title} [{show.year}]</h1>
+    <div class="gap">
+      <div class="stack">
+        <span>{show.kind === 'solo' ? ui.soloOne : ui.groupOne}, {place}</span>
+        {dates && <span>{dates}</span>}
+        {show.note && <span>{t(show.note, lang)}</span>}
+        {show.link && <a href={show.link} target="_blank" rel="noopener"><span class="mk" aria-hidden="true">[↗]</span>{' '}{ui.visit}</a>}
+      </div>
+      <Texts texts={show.texts} lang={lang} />
+    </div>
+    <div class="right">
+      <a href={href(lang, '/exposicoes')}><span class="mk" aria-hidden="true">[←]</span>{' '}{ui.exhibitions}</a>
+    </div>
+  </header>
+
+  <div class="col">
+    {show.images.map((im, i) => (
+      <figure class="fig" style={`--r:${ratio(im)}`}>
+        <span class="ph"><img src={imgUrl(im, 1600)} srcset={srcset(im)} sizes="(max-width: 800px) 92vw, 760px" alt={im.alt || `${ui.installView}, ${title}`} loading={i === 0 ? 'eager' : 'lazy'} decoding="async" width={im.w} height={im.h} /></span>
+        <figcaption>{im.caption || `${title}, ${ui.installView.toLowerCase()}, ${place}, ${show.year}`}{show.photoCredit && ` — ${ui.photos}: ${show.photoCredit}`}</figcaption>
+      </figure>
+    ))}
+
+    {show.works.map((w) => {
+      const cover = w.images[0];
+      const wt = t(w.title, lang);
+      return (
+        <figure class="fig" style={`--r:${ratio(cover)}`}>
+          <a class="ph" href={href(lang, `/obras/${w.slug}`)}><img src={imgUrl(cover, 1600)} srcset={srcset(cover)} sizes="(max-width: 800px) 92vw, 760px" alt={cover.alt || `${wt}, ${w.year}`} loading="lazy" decoding="async" width={cover.w} height={cover.h} /></a>
+          <figcaption>
+            <a href={href(lang, `/obras/${w.slug}`)}>{wt}, {w.year}</a>
+            {w.technique && <span>{t(w.technique, lang)}</span>}
+            {w.dimensions && <span>{t(w.dimensions, lang)}</span>}
+            <AudioGuide tracks={w.audio} lang={lang} label={wt} />
+          </figcaption>
+        </figure>
+      );
+    })}
+  </div>
+</Base>

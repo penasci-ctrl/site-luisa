@@ -1,0 +1,31 @@
+---
+// Textos ligados a uma exposição ou obra: cada um abre e fecha no lugar ("[ ] Texto — Autor")
+import { UI, t, tBlocks } from '../lib/i18n.js';
+const { texts = [], lang = 'pt' } = Astro.props;
+const ui = UI[lang];
+---
+{texts.map((x) => {
+  const id = `txt-${x.id}`;
+  const label = x.kind === 'poem' ? `${ui.poem}: ${t(x.title, lang)}` : ui.textBy;
+  return (
+    <div class="stack">
+      <button type="button" data-toggle aria-expanded="false" aria-controls={id}><span class="mk" aria-hidden="true">[ ]</span>{' '}{label} — {x.author}</button>
+      <div class={`reading${x.kind === 'poem' ? ' poem' : ''}`} id={id} hidden style="margin: 13px 0 26px">
+        <Fragment set:html={tBlocks(x.body, lang)} />
+        {x.link && <p><a class="ln" href={x.link} target="_blank" rel="noopener">↗ {x.link.replace(/^https?:\/\//, '')}</a></p>}
+      </div>
+    </div>
+  );
+})}
+
+<script>
+  document.querySelectorAll('[data-toggle]').forEach((b) => {
+    const box = document.getElementById(b.getAttribute('aria-controls'));
+    if (!box) return;
+    b.addEventListener('click', () => {
+      box.hidden = !box.hidden;
+      b.setAttribute('aria-expanded', String(!box.hidden));
+      b.querySelector('.mk').textContent = box.hidden ? '[ ]' : '[·]';
+    });
+  });
+</script>

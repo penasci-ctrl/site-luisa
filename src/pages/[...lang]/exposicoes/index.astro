@@ -1,0 +1,94 @@
+---
+import Base from '../../../layouts/Base.astro';
+import { getContent } from '../../../lib/content.js';
+import { UI, href, t, langPaths } from '../../../lib/i18n.js';
+import { imgUrl, ratio } from '../../../lib/img.js';
+
+export function getStaticPaths() { return langPaths(); }
+
+const { lang } = Astro.props;
+const ui = UI[lang];
+const { exhibitions } = await getContent();
+const cover = (e) => e.images[0] || e.works?.[0]?.images?.[0];
+const withPage = exhibitions.filter((e) => !e.showInCvOnly);
+---
+<Base lang={lang} section="exhibitions" path="/exposicoes" title={ui.exhibitions}>
+  <div class="list">
+    <div class="stack">
+      <h1>{ui.allExhibitions} [<span data-count>{String(exhibitions.length).padStart(2, '0')}</span>]</h1>
+      <div class="filters" role="group" data-kind-filter style="margin-top: 13px">
+        <button type="button" data-k="all" aria-pressed="true"><span class="mk" aria-hidden="true">[·]</span>{' '}{ui.all}</button>
+        <button type="button" data-k="solo" aria-pressed="false"><span class="mk" aria-hidden="true">[ ]</span>{' '}{ui.solo}</button>
+        <button type="button" data-k="group" aria-pressed="false"><span class="mk" aria-hidden="true">[ ]</span>{' '}{ui.group}</button>
+      </div>
+    </div>
+
+    <div data-view="list">
+      <div class="rows" data-rows><ul>
+        {exhibitions.map((e) => {
+          const c = cover(e);
+          const place = [e.venue, t(e.city, lang)].filter(Boolean).join(', ');
+          const note = t(e.note, lang);
+          const label = `${t(e.title, lang)}, ${place}${note ? ` (${note})` : ''}`;
+          return (
+            <li class="row" data-kind={e.kind} data-preview={c ? imgUrl(c, 400) : ''} data-ratio={c ? ratio(c) : ''}>
+              {e.showInCvOnly ? <span>{label}</span> : <a href={href(lang, `/exposicoes/${e.slug}`)}>{label}</a>}
+              <span>[{e.year}]</span>
+            </li>
+          );
+        })}
+      </ul>
+      <img class="preview" alt="" aria-hidden="true" data-preview-img /></div>
+    </div>
+
+    <div data-view="overview" hidden>
+      <div class="overview">
+        {withPage.map((e) => {
+          const c = cover(e);
+          return (
+            <a href={href(lang, `/exposicoes/${e.slug}`)} class="stack" data-kind={e.kind} style="gap: 6px">
+              {c && <span class="ph" style={`--r:${ratio(c)}`}><img src={imgUrl(c, 500)} alt={c.alt || t(e.title, lang)} loading="lazy" decoding="async" /></span>}
+              <span>{t(e.title, lang)} [{e.year}]</span>
+            </a>
+          );
+        })}
+      </div>
+    </div>
+  </div>
+
+  <div slot="chrome" class="viewtoggle dif" role="group" aria-label={`${ui.overview} / ${ui.list}`}>
+    <button type="button" data-v="overview" aria-pressed="false"><span class="mk" aria-hidden="true">[ ]</span>{' '}{ui.overview}</button>
+    <button type="button" data-v="list" aria-pressed="true"><span class="mk" aria-hidden="true">[·]</span>{' '}{ui.list}</button>
+  </div>
+
+  <script>
+    const mark = (b, on) => { b.setAttribute('aria-pressed', String(on)); b.querySelector('.mk').textContent = on ? '[·]' : '[ ]'; };
+    // Visão geral / Lista
+    const views = document.querySelectorAll('[data-view]');
+    const vbtns = document.querySelectorAll('[data-v]');
+    vbtns.forEach((b) => b.addEventListener('click', () => {
+      vbtns.forEach((x) => mark(x, x === b));
+      views.forEach((v) => { v.hidden = v.dataset.view !== b.dataset.v; });
+    }));
+    // Todas / Individuais / Coletivas
+    const kbtns = document.querySelectorAll('[data-k]');
+    const items = document.querySelectorAll('[data-kind]');
+    const count = document.querySelector('[data-count]');
+    kbtns.forEach((b) => b.addEventListener('click', () => {
+      kbtns.forEach((x) => mark(x, x === b));
+      items.forEach((el) => { el.hidden = b.dataset.k !== 'all' && el.dataset.kind !== b.dataset.k; });
+      count.textContent = String(document.querySelectorAll('[data-rows] [data-kind]:not([hidden])').length).padStart(2, '0');
+    }));
+    // Miniatura sobre a lista, ao lado da linha
+    const box = document.querySelector('[data-preview-img]');
+    document.querySelectorAll('[data-rows] .row').forEach((r) => {
+      r.addEventListener('mouseenter', () => {
+        if (!r.dataset.preview) { box.classList.remove('is-on'); return; }
+        box.src = r.dataset.preview;
+        box.style.top = `${r.offsetTop + 6}px`;
+        box.classList.add('is-on');
+      });
+      r.addEventListener('mouseleave', () => box.classList.remove('is-on'));
+    });
+  </script>
+</Base>
