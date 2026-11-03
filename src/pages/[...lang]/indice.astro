@@ -131,10 +131,16 @@ const pad = (n) => String(n).padStart(2, '0');
 
     // miniatura ao passar o mouse
     const box = document.querySelector('[data-preview-img]');
+    // aparece só com o mouse sobre o título da obra e some assim que ele sai
+    const hide = () => box.classList.remove('is-on');
     rows.forEach((r) => {
-      r.addEventListener('mouseenter', () => { box.src = r.dataset.preview; box.style.top = `${r.offsetTop + 6}px`; box.classList.add('is-on'); });
-      r.addEventListener('mouseleave', () => box.classList.remove('is-on'));
+      const label = r.querySelector('.row-x > :nth-child(2)');
+      if (!label) return;
+      label.addEventListener('mouseenter', () => { box.src = r.dataset.preview; box.style.top = `${r.offsetTop + 6}px`; box.classList.add('is-on'); });
+      label.addEventListener('mouseleave', hide);
     });
+    addEventListener('scroll', hide, { passive: true });
+    document.addEventListener('mouseleave', hide);
     render();
   </script>
 </Base>

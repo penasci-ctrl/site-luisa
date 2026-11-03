@@ -79,16 +79,20 @@ const withPage = exhibitions.filter((e) => !e.showInCvOnly);
       items.forEach((el) => { el.hidden = b.dataset.k !== 'all' && el.dataset.kind !== b.dataset.k; });
       count.textContent = String(document.querySelectorAll('[data-rows] [data-kind]:not([hidden])').length).padStart(2, '0');
     }));
-    // Miniatura sobre a lista, ao lado da linha
+    // Miniatura: aparece só com o mouse sobre o texto da exposição e some assim que ele sai
     const box = document.querySelector('[data-preview-img]');
+    const hide = () => box.classList.remove('is-on');
     document.querySelectorAll('[data-rows] .row').forEach((r) => {
-      r.addEventListener('mouseenter', () => {
-        if (!r.dataset.preview) { box.classList.remove('is-on'); return; }
+      const label = r.firstElementChild;
+      if (!r.dataset.preview || !label) return;
+      label.addEventListener('mouseenter', () => {
         box.src = r.dataset.preview;
         box.style.top = `${r.offsetTop + 6}px`;
         box.classList.add('is-on');
       });
-      r.addEventListener('mouseleave', () => box.classList.remove('is-on'));
+      label.addEventListener('mouseleave', hide);
     });
+    addEventListener('scroll', hide, { passive: true });
+    document.addEventListener('mouseleave', hide);
   </script>
 </Base>

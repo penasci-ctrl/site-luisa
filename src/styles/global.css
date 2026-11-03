@@ -18,7 +18,6 @@ html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font); font-size: var(--size); line-height: 1.25; }
 img { display: block; max-width: 100%; height: auto; }
 a { color: inherit; text-decoration: none; }
-a:hover, button:hover { text-decoration: underline; text-underline-offset: 2px; }
 button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; text-align: left; }
 h1, h2, h3, p, dl, dd, figure, ul, ol { margin: 0; font: inherit; }
 ul, ol { padding: 0; list-style: none; }
@@ -45,7 +44,6 @@ ul, ol { padding: 0; list-style: none; }
 .tile .ph img { width: 100%; height: 100%; object-fit: cover; }
 .tile .cap { position: absolute; top: 100%; left: 0; padding-top: 4px; opacity: 0; transition: opacity .3s; white-space: nowrap; }
 .tile:hover .cap, .tile:focus-visible .cap { opacity: 1; }
-.tile:hover { text-decoration: none; }
 
 /* ------------------------------------------------------------ cabeçalho das páginas (3 colunas) */
 .top { display: grid; grid-template-columns: var(--c2) minmax(0, var(--c4)) minmax(0, 1fr); padding: var(--edge); align-items: start; }
@@ -73,8 +71,8 @@ ul, ol { padding: 0; list-style: none; }
 .rows { position: relative; }
 .row { display: grid; grid-template-columns: minmax(0, var(--c4)) auto; gap: 16px; }
 .row-x { display: grid; grid-template-columns: 28px minmax(0, 2.2fr) 44px minmax(0, 3fr) minmax(0, 1.4fr) minmax(0, 1fr); gap: 16px; }
-.preview { position: absolute; z-index: 5; left: 84px; width: 152px; pointer-events: none; opacity: 0; transition: opacity .2s; }
-.preview.is-on { opacity: 1; }
+.preview { position: absolute; z-index: 5; left: 84px; width: 152px; pointer-events: none; visibility: hidden; }
+.preview.is-on { visibility: visible; }
 .filters { display: flex; flex-wrap: wrap; gap: 0 18px; }
 .overview { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 24px 14px; align-items: end; max-width: 1000px; }
 .overview .ph { aspect-ratio: var(--r); background: #f2f2f2; }
