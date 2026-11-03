@@ -5,7 +5,7 @@ import { Button, Flex, Stack, Text } from '@sanity/ui'
 import { set, useDocumentOperation, useFormValue } from 'sanity'
 
 export const API = 'https://luisaalcantara-site.penasci-design.workers.dev/api'
-const PROJECT = process.env.SANITY_STUDIO_PROJECT_ID || ''
+const PROJECT = process.env.SANITY_STUDIO_PROJECT_ID || 'eo5i0cv6'
 const DATASET = 'production'
 
 async function post(path, body) {

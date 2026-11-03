@@ -8,7 +8,7 @@ import { AutoFillAction } from './ai'
 export default defineConfig({
   name: 'luisaalcantara',
   title: 'Luisa Alcântara',
-  projectId: process.env.SANITY_STUDIO_PROJECT_ID || '',
+  projectId: process.env.SANITY_STUDIO_PROJECT_ID || 'eo5i0cv6',
   dataset: process.env.SANITY_STUDIO_DATASET || 'production',
   plugins: [structureTool({ structure }), visionTool()],
   schema: {
