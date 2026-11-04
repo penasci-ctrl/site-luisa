@@ -1,6 +1,7 @@
+// VERSÃO DE TESTE (branch teste) — não juntar esta linha de nome na branch oficial.
 // Cloudflare Worker: arquivos estáticos do Astro (dist/) + rotas /api/* para o painel (tradução e descrição de imagem)
 {
-  "name": "luisaalcantara-site",
+  "name": "luisaalcantara-teste",
   "main": "worker/index.js",
   "compatibility_date": "2026-10-01",
   "assets": {
